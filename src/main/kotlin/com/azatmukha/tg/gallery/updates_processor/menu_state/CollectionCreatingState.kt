@@ -47,9 +47,11 @@ class CollectionCreatingState(
             updatesProcessor.changeState(userId,
                 updatesProcessor.getState(DEFAULT_STATE_NAME)
             )
-        } else {
-            val collectionCreatingError = createCollection(message.text())
-            val messageToSend = if (collectionCreatingError == null) {
+            return
+        }
+        val collectionCreatingError = createCollection(message.text())
+        val messageToSend =
+            if (collectionCreatingError == null) {
                 val textToSend = COLLECTION_CREATED_SUCCESSFULLY_MESSAGE
                     .replace("<COLLECTION_NAME>", message.text())
                 SendMessage(userId, textToSend)
@@ -59,8 +61,7 @@ class CollectionCreatingState(
                     .replyMarkup(getKeyboard())
             }
 
-            updatesProcessor.bot.execute(messageToSend)
-        }
+        updatesProcessor.bot.execute(messageToSend)
     }
 
     // Tries to create a new directory inside the storage directory.

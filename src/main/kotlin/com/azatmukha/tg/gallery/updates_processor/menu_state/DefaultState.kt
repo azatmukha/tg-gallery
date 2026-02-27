@@ -38,15 +38,17 @@ class DefaultState(
             updatesProcessor.changeState(userId,
                 updatesProcessor.getState(COLLECTION_CREATING_STATE_NAME)
             )
-        } else if (message.text() == ADD_IMAGE_MESSAGE) {
+            return
+        }
+        if (message.text() == ADD_IMAGE_MESSAGE) {
             updatesProcessor.changeState(userId,
                 updatesProcessor.getState(IMAGE_ADDING_STATE_NAME)
             )
-        } else {
-            logger.warn { "Unexpected message is received. Id: ${message.messageId()}, text: ${message.text()}" }
-
-            // Reset the UI state to avoid user's confusion
-            doState(userId)
+            return
         }
+        logger.warn { "Unexpected message is received. Id: ${message.messageId()}, text: ${message.text()}" }
+
+        // Reset the UI state to avoid user's confusion
+        doState(userId)
     }
 }
