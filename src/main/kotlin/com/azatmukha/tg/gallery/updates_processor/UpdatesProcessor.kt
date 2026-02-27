@@ -128,7 +128,7 @@ class UpdatesProcessor(
     }
 
     private fun MutableMap<String, MenuState>.getOrDefault(key: String): MenuState =
-        this.computeIfAbsent(key){
+        this.computeIfAbsent(key) {
             this@UpdatesProcessor.getState(DEFAULT_STATE_NAME)
         }
 }
