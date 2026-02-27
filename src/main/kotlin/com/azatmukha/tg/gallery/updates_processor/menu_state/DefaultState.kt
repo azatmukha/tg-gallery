@@ -18,11 +18,11 @@ class DefaultState(
     updatesProcessor: UpdatesProcessor
 ): MenuState(DEFAULT_STATE_NAME, updatesProcessor) {
     override fun doState(userId: Long) {
-        val nextButton = KeyboardButton(NEW_COLLECTION_MESSAGE)
-        val backButton = KeyboardButton(ADD_IMAGE_MESSAGE)
+        val newCollectionButton = KeyboardButton(NEW_COLLECTION_MESSAGE)
+        val addImagesButton = KeyboardButton(ADD_IMAGE_MESSAGE)
 
         val keyboard = ReplyKeyboardMarkup(
-            arrayOf(nextButton), arrayOf(backButton)
+            arrayOf(newCollectionButton), arrayOf(addImagesButton)
         ).resizeKeyboard(true)
 
 

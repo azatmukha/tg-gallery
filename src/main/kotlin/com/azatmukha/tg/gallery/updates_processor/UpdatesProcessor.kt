@@ -18,20 +18,20 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 private val logger = KotlinLogging.logger {}
 
 private const val WELCOME_MESSAGE =
-    """
-    Welcome to Telegram Gallery bot!
-    """
+"""
+Welcome to Telegram Gallery bot!
+"""
 private const val NO_PERMISSION_MESSAGE =
-    """        
-    You do not have permission to use this bot.
-    Please, contact the developer if you think you should have the access.
-    """
+"""
+You do not have permission to use this bot.
+Please, contact the developer if you think you should have the access.
+"""
 private const val HELP_MESSAGE =
-    """
-    I can help you manage endless images that your friends share with you in Telegram and save them automatically on a host machine. 
+"""
+I can help you manage endless images that your friends share with you in Telegram and save them automatically on a host machine. 
 
-    Use keyboard to navigate.
-    """
+Use keyboard to navigate.
+"""
 
 class UpdatesProcessor(
     val bot: TelegramBot = TelegramBot(getToken()),
