@@ -3,10 +3,11 @@ package com.azatmukha.tg.gallery.updates_processor
 import com.azatmukha.tg.gallery.getToken
 import com.azatmukha.tg.gallery.getWhiteList
 import com.azatmukha.tg.gallery.updates_processor.menu_state.CollectionCreatingState
-import com.azatmukha.tg.gallery.updates_processor.menu_state.DEFAULT_STATE_NAME
+import com.azatmukha.tg.gallery.updates_processor.menu_state.MenuStateEnum.DEFAULT
 import com.azatmukha.tg.gallery.updates_processor.menu_state.DefaultState
 import com.azatmukha.tg.gallery.updates_processor.menu_state.ImageAddingState
 import com.azatmukha.tg.gallery.updates_processor.menu_state.MenuState
+import com.azatmukha.tg.gallery.updates_processor.menu_state.MenuStateEnum
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.UpdatesListener
 import com.pengrad.telegrambot.model.Message
@@ -14,6 +15,7 @@ import com.pengrad.telegrambot.model.MessageEntity.Type
 import com.pengrad.telegrambot.model.Update
 import com.pengrad.telegrambot.request.SendMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
+import java.util.EnumMap
 
 private val logger = KotlinLogging.logger {}
 
@@ -38,14 +40,18 @@ class UpdatesProcessor(
     private val userToMenuState: MutableMap<Long, MenuState> = mutableMapOf(),
 ) {
 
-    private val availableStates: Map<String, MenuState> =
-        listOf(DefaultState(this),
-            ImageAddingState(this),
-            CollectionCreatingState(this)
+    private val availableStates: EnumMap<MenuStateEnum, MenuState> =
+        EnumMap(
+            listOf(DefaultState(this),
+                ImageAddingState(this),
+                CollectionCreatingState(this)
+            )
+                .associateBy { it.state }
         )
-            .associateBy { it.stateName }
 
-    fun getState(stateName: String) = availableStates[stateName]!!
+    fun getState(state: MenuStateEnum) = requireNotNull(availableStates[state]) {
+        "$state state is not available!"
+    }
 
     fun run() {
         bot.setUpdatesListener(
@@ -100,17 +106,15 @@ class UpdatesProcessor(
         if (message.isCommand() && message.text() == "/start") {
             val response = SendMessage(userId, WELCOME_MESSAGE)
             bot.execute(response)
-            val newUserState = requireNotNull(availableStates[DEFAULT_STATE_NAME]){
-                "$DEFAULT_STATE_NAME state is not available!"
-            }
+            val newUserState = getState(MenuStateEnum.DEFAULT)
             newUserState.doState(userId)
-            userToMenuState[userId] = getState(DEFAULT_STATE_NAME)
+            userToMenuState[userId] = newUserState
         } else if (message.isCommand() && message.text() == "/help") {
             val response = SendMessage(userId, HELP_MESSAGE)
             bot.execute(response)
         } else {
             userToMenuState.computeIfAbsent(userId) {
-                this.getState(DEFAULT_STATE_NAME)
+                this.getState(MenuStateEnum.DEFAULT)
             }
                 .processMessage(message)
         }
@@ -129,6 +133,6 @@ class UpdatesProcessor(
 
     private fun MutableMap<String, MenuState>.getOrDefault(key: String): MenuState =
         this.computeIfAbsent(key) {
-            this@UpdatesProcessor.getState(DEFAULT_STATE_NAME)
+            this@UpdatesProcessor.getState(MenuStateEnum.DEFAULT)
         }
 }

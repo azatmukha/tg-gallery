@@ -4,7 +4,7 @@ import com.azatmukha.tg.gallery.updates_processor.UpdatesProcessor
 import com.pengrad.telegrambot.model.Message
 
 abstract class MenuState(
-    val stateName: String,
+    val state: MenuStateEnum,
     protected val updatesProcessor: UpdatesProcessor
 ) {
 

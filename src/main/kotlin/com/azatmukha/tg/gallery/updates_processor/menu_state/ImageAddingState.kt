@@ -25,8 +25,6 @@ import kotlin.system.exitProcess
 
 private val logger = KotlinLogging.logger {}
 
-const val IMAGE_ADDING_STATE_NAME = "IMAGE_ADDING"
-
 private const val INITIAL_MESSAGE =
 """
 Please send a collection name that you want to add images into.
@@ -57,7 +55,7 @@ private const val FINISH_MESSAGE = "Finish"
 
 class ImageAddingState(
     updatesProcessor: UpdatesProcessor
-): MenuState(IMAGE_ADDING_STATE_NAME, updatesProcessor)  {
+): MenuState(MenuStateEnum.IMAGE_ADDING, updatesProcessor)  {
 
     val userToCollection: MutableMap<Long, String> = mutableMapOf()
 
@@ -154,7 +152,7 @@ class ImageAddingState(
             userToCollection.remove(userId)
 
             updatesProcessor.changeState(userId,
-                updatesProcessor.getState(DEFAULT_STATE_NAME)
+                updatesProcessor.getState(MenuStateEnum.DEFAULT)
             )
             return
         }

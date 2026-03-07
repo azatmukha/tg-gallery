@@ -12,11 +12,9 @@ private val logger = KotlinLogging.logger {}
 private const val NEW_COLLECTION_MESSAGE = "Create new collection"
 private const val ADD_IMAGE_MESSAGE = "Add images to existing collection"
 
-const val DEFAULT_STATE_NAME = "DEFAULT"
-
 class DefaultState(
     updatesProcessor: UpdatesProcessor
-): MenuState(DEFAULT_STATE_NAME, updatesProcessor) {
+): MenuState(MenuStateEnum.DEFAULT, updatesProcessor) {
     override fun doState(userId: Long) {
         val newCollectionButton = KeyboardButton(NEW_COLLECTION_MESSAGE)
         val addImagesButton = KeyboardButton(ADD_IMAGE_MESSAGE)
@@ -36,13 +34,13 @@ class DefaultState(
         val userId = message.from().id()
         if (message.text() == NEW_COLLECTION_MESSAGE) {
             updatesProcessor.changeState(userId,
-                updatesProcessor.getState(COLLECTION_CREATING_STATE_NAME)
+                updatesProcessor.getState(MenuStateEnum.COLLECTION_CREATING)
             )
             return
         }
         if (message.text() == ADD_IMAGE_MESSAGE) {
             updatesProcessor.changeState(userId,
-                updatesProcessor.getState(IMAGE_ADDING_STATE_NAME)
+                updatesProcessor.getState(MenuStateEnum.IMAGE_ADDING)
             )
             return
         }

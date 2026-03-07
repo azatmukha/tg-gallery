@@ -13,8 +13,6 @@ import kotlin.io.path.exists
 
 private val logger = KotlinLogging.logger {}
 
-const val COLLECTION_CREATING_STATE_NAME = "COLLECTION_CREATING"
-
 private const val INITIAL_MESSAGE =
 """
 Enter a collection name to be created. 
@@ -33,7 +31,7 @@ private const val FINISH_MESSAGE = "Finish"
 
 class CollectionCreatingState(
     updatesProcessor: UpdatesProcessor
-): MenuState(COLLECTION_CREATING_STATE_NAME, updatesProcessor) {
+): MenuState(MenuStateEnum.COLLECTION_CREATING, updatesProcessor) {
     override fun doState(userId: Long) {
         val message = SendMessage(userId, INITIAL_MESSAGE)
             .replyMarkup(getKeyboard())
@@ -45,7 +43,7 @@ class CollectionCreatingState(
         val userId = message.from().id()
         if (message.text() == FINISH_MESSAGE) {
             updatesProcessor.changeState(userId,
-                updatesProcessor.getState(DEFAULT_STATE_NAME)
+                updatesProcessor.getState(MenuStateEnum.DEFAULT)
             )
             return
         }
