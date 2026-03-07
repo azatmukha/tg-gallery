@@ -1,9 +1,7 @@
 package com.azatmukha.tg.gallery.updates_processor.menu_state
 
 import com.azatmukha.tg.gallery.getStorageDirectory
-import com.azatmukha.tg.gallery.getToken
 import com.azatmukha.tg.gallery.updates_processor.UpdatesProcessor
-import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.Document
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.PhotoSize
@@ -21,7 +19,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.pathString
-import kotlin.system.exitProcess
 
 private val logger = KotlinLogging.logger {}
 
@@ -148,7 +145,8 @@ class ImageAddingState(
 
     private fun processTextInMessage(message: Message) {
         val userId = message.from().id()
-        if (message.text() == FINISH_MESSAGE) {
+        val text = message.text()
+        if (text == FINISH_MESSAGE) {
             userToCollection.remove(userId)
 
             updatesProcessor.changeState(userId,
@@ -158,7 +156,7 @@ class ImageAddingState(
         }
 
         val currentCollection = userToCollection[userId]
-        if (getCollectionList().contains(message.text()) &&
+        if (getCollectionList().contains(text) &&
             currentCollection != null) {
 
             val textToSend = UNEXPECTED_COLLECTION_NAME
@@ -171,10 +169,10 @@ class ImageAddingState(
             updatesProcessor.bot.execute(messageToSend)
         }
 
-        if (getCollectionList().contains(message.text()) &&
+        if (getCollectionList().contains(text) &&
             currentCollection == null) {
 
-            val selectedCollection = message.text()
+            val selectedCollection = text
             userToCollection[userId] = selectedCollection
 
             val textToSend = COLLECTION_SELECTED

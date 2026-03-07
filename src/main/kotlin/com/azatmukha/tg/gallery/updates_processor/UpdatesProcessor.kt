@@ -3,7 +3,6 @@ package com.azatmukha.tg.gallery.updates_processor
 import com.azatmukha.tg.gallery.getToken
 import com.azatmukha.tg.gallery.getWhiteList
 import com.azatmukha.tg.gallery.updates_processor.menu_state.CollectionCreatingState
-import com.azatmukha.tg.gallery.updates_processor.menu_state.MenuStateEnum.DEFAULT
 import com.azatmukha.tg.gallery.updates_processor.menu_state.DefaultState
 import com.azatmukha.tg.gallery.updates_processor.menu_state.ImageAddingState
 import com.azatmukha.tg.gallery.updates_processor.menu_state.MenuState
@@ -130,9 +129,4 @@ class UpdatesProcessor(
             ?.let { type -> type == Type.bot_command }
             ?: false
     }
-
-    private fun MutableMap<String, MenuState>.getOrDefault(key: String): MenuState =
-        this.computeIfAbsent(key) {
-            this@UpdatesProcessor.getState(MenuStateEnum.DEFAULT)
-        }
 }
