@@ -157,12 +157,13 @@ class ImageAddingState(
             return
         }
 
+        val currentCollection = userToCollection[userId]
         if (getCollectionList().contains(message.text()) &&
-            userToCollection.contains(userId)) {
+            currentCollection != null) {
 
             val textToSend = UNEXPECTED_COLLECTION_NAME
                 .replace("<COLLECTION_NAME>",
-                    userToCollection[userId]!!
+                    currentCollection
                 )
             val messageToSend = SendMessage(userId, textToSend)
                 .replyMarkup(getKeyboard())
@@ -171,14 +172,15 @@ class ImageAddingState(
         }
 
         if (getCollectionList().contains(message.text()) &&
-            !userToCollection.contains(userId)) {
+            currentCollection == null) {
 
-            userToCollection[userId] = message.text()
+            val selectedCollection = message.text()
+            userToCollection[userId] = selectedCollection
 
             val textToSend = COLLECTION_SELECTED
                 .replace(
                     "<COLLECTION_NAME>",
-                    userToCollection[userId]!!
+                    selectedCollection
                 )
             val messageToSend = SendMessage(userId, textToSend)
                 .replyMarkup(getKeyboard())

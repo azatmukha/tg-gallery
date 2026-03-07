@@ -122,7 +122,7 @@ class UpdatesProcessor(
 
     internal fun changeState(userId: Long, state: MenuState) {
         userToMenuState[userId] = state
-        userToMenuState[userId]!!.doState(userId)
+        state.doState(userId)
     }
 
     private fun Message.isCommand(): Boolean {
