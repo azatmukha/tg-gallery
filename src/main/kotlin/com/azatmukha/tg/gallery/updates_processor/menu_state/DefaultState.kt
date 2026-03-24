@@ -1,6 +1,7 @@
 package com.azatmukha.tg.gallery.updates_processor.menu_state
 
 import com.azatmukha.tg.gallery.updates_processor.UpdatesProcessor
+import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.request.KeyboardButton
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup
@@ -48,5 +49,8 @@ class DefaultState(
 
         // Reset the UI state to avoid user's confusion
         doState(userId)
+    }
+
+    override fun processCallbackQuery(query: CallbackQuery) {
     }
 }

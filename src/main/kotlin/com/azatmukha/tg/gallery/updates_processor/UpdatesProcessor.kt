@@ -9,9 +9,11 @@ import com.azatmukha.tg.gallery.updates_processor.menu_state.MenuState
 import com.azatmukha.tg.gallery.updates_processor.menu_state.MenuStateEnum
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.UpdatesListener
+import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.MessageEntity.Type
 import com.pengrad.telegrambot.model.Update
+import com.pengrad.telegrambot.request.AnswerCallbackQuery
 import com.pengrad.telegrambot.request.SendMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.util.EnumMap
@@ -93,35 +95,87 @@ class UpdatesProcessor(
     }
 
     private fun processUpdate(update: Update) {
-        val message = update.message() ?: return
-        val userId = message.from().id()
-
-        if (!getWhiteList().contains(userId)) {
-            val response = SendMessage(userId, NO_PERMISSION_MESSAGE)
-            bot.execute(response)
+        val message = update.message()
+        val callbackQuery = update.callbackQuery()
+        if (message == null && callbackQuery == null) {
             return
         }
 
-        if (message.isCommand() && message.text() == "/start") {
+        val userId = callbackQuery?.from()?.id()
+            ?: message?.from()?.id()
+            ?: return
+
+        if (!getWhiteList().contains(userId)) {
+            handleNoPermission(userId, message, callbackQuery)
+            return
+        }
+
+        if (callbackQuery != null) {
+            handleCallbackQueryWrapper(callbackQuery)
+            return
+        }
+
+        val nonNullMessage = requireNotNull(message)
+        if (nonNullMessage.isCommand() && nonNullMessage.text() == "/start") {
             val response = SendMessage(userId, WELCOME_MESSAGE)
             bot.execute(response)
             val newUserState = getState(MenuStateEnum.DEFAULT)
-            newUserState.doState(userId)
             userToMenuState[userId] = newUserState
-        } else if (message.isCommand() && message.text() == "/help") {
+            newUserState.doState(userId)
+        } else if (nonNullMessage.isCommand() && nonNullMessage.text() == "/help") {
             val response = SendMessage(userId, HELP_MESSAGE)
             bot.execute(response)
         } else {
             userToMenuState.computeIfAbsent(userId) {
                 this.getState(MenuStateEnum.DEFAULT)
             }
-                .processMessage(message)
+                .processMessage(nonNullMessage)
         }
     }
 
     internal fun changeState(userId: Long, state: MenuState) {
         userToMenuState[userId] = state
         state.doState(userId)
+    }
+
+    private fun handleNoPermission(userId: Long, message: Message?, callbackQuery: CallbackQuery?) {
+        val chatId = message?.chat()?.id() ?: callbackQuery?.message()?.chat()?.id()
+        if (chatId != null) {
+            val response = SendMessage(chatId, NO_PERMISSION_MESSAGE)
+            bot.execute(response)
+        }
+        callbackQuery?.let { bot.execute(AnswerCallbackQuery(it.id())) }
+    }
+
+    private fun handleCallbackQueryWrapper(callbackQuery: CallbackQuery) {
+        handleCallbackQuery(callbackQuery);
+        bot.execute(AnswerCallbackQuery(callbackQuery.id()))
+    }
+
+    private fun handleCallbackQuery(callbackQuery: CallbackQuery) {
+        val data = callbackQuery.data()
+        if (data.isNullOrBlank()) {
+            logger.warn { "Callback data is empty" }
+            return
+        }
+
+        val separatorIndex = data.indexOf("::")
+        if (separatorIndex == -1) {
+            logger.warn { "Callback data '${data}' has no state prefix" }
+            return
+        }
+
+        val statePrefix = data.take(separatorIndex)
+        val menuStateEnum = runCatching { MenuStateEnum.valueOf(statePrefix) }
+            .onFailure { logger.warn { "Unknown state '$statePrefix' in callback data '$data'" } }
+            .getOrNull()
+
+        if (menuStateEnum == null) {
+            return
+        }
+
+        val targetState = getState(menuStateEnum)
+        targetState.processCallbackQuery(callbackQuery)
     }
 
     private fun Message.isCommand(): Boolean {

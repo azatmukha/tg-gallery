@@ -1,6 +1,7 @@
 package com.azatmukha.tg.gallery.updates_processor.menu_state
 
 import com.azatmukha.tg.gallery.updates_processor.UpdatesProcessor
+import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Message
 
 abstract class MenuState(
@@ -10,4 +11,5 @@ abstract class MenuState(
 
     abstract fun doState(userId: Long)
     abstract fun processMessage(message: Message)
+    abstract fun processCallbackQuery(query: CallbackQuery)
 }
