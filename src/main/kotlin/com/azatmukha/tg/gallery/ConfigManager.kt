@@ -1,19 +1,27 @@
 package com.azatmukha.tg.gallery
 
+import java.io.FileInputStream
 import java.util.Properties
 
 private var TOKEN: String? = null
 private var DIRECTORY: String? = null
 private var WHITELIST: Set<Long>? = null
 
-private fun getProperty(key: String): String {
+private val fileProperties: Properties by lazy {
     val props = Properties()
-    val input = object {}.javaClass
-        .getResourceAsStream("/.env")
-    props.load(input)
+    val filePath = System.getenv("CONFIGURATION_FILEPATH")
+    if (!filePath.isNullOrBlank()) {
+        FileInputStream(filePath).use { props.load(it) }
+    }
+    props
+}
 
-    val result = requireNotNull(props.getProperty(key)) {
-        "Could not find $key value in .env configuration"
+private fun getProperty(key: String): String {
+    val envValue = System.getenv(key)
+    if (!envValue.isNullOrBlank()) return envValue
+
+    val result = requireNotNull(fileProperties.getProperty(key)) {
+        "Could not find $key in environment variables or configuration file"
     }
     return result
 }
