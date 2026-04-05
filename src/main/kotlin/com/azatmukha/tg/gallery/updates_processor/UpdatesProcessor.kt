@@ -86,15 +86,13 @@ class UpdatesProcessor(
                 } catch (ex: Exception) {
                     val messageId = update.message()?.messageId()
                     logger.error { "Exception occurred while processing the message $messageId. Reason: ${ex.message}. Stack trace: ${ex.stackTraceToString()}" }
-                } catch (ex: NotImplementedError) {
-                    // TODO: remove this catch block
-                    logger.error { "Error occurred while processing an update. Reason: ${ex.message}. Stack trace: ${ex.stackTraceToString()}" }
                 }
             }
         return UpdatesListener.CONFIRMED_UPDATES_ALL
     }
 
     private fun processUpdate(update: Update) {
+        logger.info { "New update is received." }
         val message = update.message()
         val callbackQuery = update.callbackQuery()
         if (message == null && callbackQuery == null) {
@@ -105,17 +103,22 @@ class UpdatesProcessor(
             ?: message?.from()?.id()
             ?: return
 
+        logger.info { "Processing update from user $userId" }
+
         if (!getWhiteList().contains(userId)) {
             handleNoPermission(userId, message, callbackQuery)
             return
         }
 
         if (callbackQuery != null) {
+            logger.info { "Received callback query with id ${callbackQuery.id()}" }
             handleCallbackQueryWrapper(callbackQuery)
             return
         }
 
         val nonNullMessage = requireNotNull(message)
+        logger.info { "Received message with id ${nonNullMessage.messageId()}" }
+
         if (nonNullMessage.isCommand() && nonNullMessage.text() == "/start") {
             val response = SendMessage(userId, WELCOME_MESSAGE)
             bot.execute(response)
