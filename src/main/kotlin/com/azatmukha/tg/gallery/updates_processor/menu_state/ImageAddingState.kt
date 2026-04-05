@@ -25,6 +25,7 @@ import kotlin.io.path.Path
 import kotlin.io.path.isDirectory
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.pathString
+import kotlin.io.path.exists
 import kotlin.text.RegexOption
 
 private val logger = KotlinLogging.logger {}
@@ -192,11 +193,7 @@ class ImageAddingState(
                 }
             }
 
-        // Download the file
-        val fileUrl = requireNotNull(getFileUrl(photoToDownload.fileId())) {
-            "Could not retrieve file url. User id: $userId, message id: $messageId"
-        }
-        downloadFile(URI(fileUrl),
+        downloadFile(URI(getFileUrl(photoToDownload.fileId())),
             getTargetPath(userId,
                 requireNotNull(userToCollection[userId]){
                     "User $userId does not have a collection assigned"
@@ -327,15 +324,43 @@ class ImageAddingState(
 
     private fun downloadFile(fileUri: URI, filepath: String) {
         try {
+            val resolvedPath = resolveUniquePath(filepath)
+            if (resolvedPath != filepath) {
+                logger.info { "File $filepath already exists. Saving as $resolvedPath" }
+            }
             val readableByteChannel = Channels.newChannel(fileUri.toURL().openStream())
-            val fileOutputStream = FileOutputStream(filepath)
+            val fileOutputStream = FileOutputStream(resolvedPath)
             val fileChannel = fileOutputStream.getChannel()
             fileChannel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE)
-            logger.info { "File $fileUri is successfully downloaded to $filepath" }
+            logger.info { "File $fileUri is successfully downloaded to $resolvedPath" }
         } catch (ex: IOException) {
             logger.error { "Error occurred while downloading $fileUri.file to $filepath. Reason: ${ex.message}" }
         } catch (ex: FileNotFoundException) {
             logger.error { "Could not create file $filepath. Reason: ${ex.message}" }
+        }
+    }
+
+    private fun resolveUniquePath(filepath: String): String {
+        val target = Path(filepath)
+        if (!target.exists()) {
+            return filepath
+        }
+
+        val fileName = target.fileName.toString()
+        val dotIndex = fileName.lastIndexOf('.')
+        val baseName = if (dotIndex > 0) fileName.take(dotIndex) else fileName
+        val extension = if (dotIndex > 0) fileName.substring(dotIndex) else ""
+
+        var counter = 1
+        while (true) {
+            val candidate = target.parent
+                ?.resolve("$baseName ($counter)$extension")
+                ?.toString()
+                ?: "$baseName ($counter)$extension"
+            if (!Path(candidate).exists()) {
+                return candidate
+            }
+            counter += 1
         }
     }
 
