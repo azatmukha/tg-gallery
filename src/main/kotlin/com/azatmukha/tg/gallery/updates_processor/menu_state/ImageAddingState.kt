@@ -6,6 +6,8 @@ import com.pengrad.telegrambot.model.CallbackQuery
 import com.pengrad.telegrambot.model.Document
 import com.pengrad.telegrambot.model.Message
 import com.pengrad.telegrambot.model.PhotoSize
+import com.pengrad.telegrambot.model.Video
+import com.pengrad.telegrambot.model.VideoNote
 import com.pengrad.telegrambot.model.request.InlineKeyboardButton
 import com.pengrad.telegrambot.model.request.InlineKeyboardMarkup
 import com.pengrad.telegrambot.model.request.KeyboardButton
@@ -109,6 +111,20 @@ class ImageAddingState(
                 message.photo().toList()
             )
         }
+
+        if (message.videoNote() != null) {
+            processVideoMessage(userId,
+                message.messageId(),
+                message.videoNote()
+            )
+        }
+
+        if (message.video() != null) {
+            processVideo(userId,
+                message.messageId(),
+                message.video()
+            )
+        }
     }
 
     override fun processCallbackQuery(query: CallbackQuery) {
@@ -189,19 +205,33 @@ class ImageAddingState(
         )
     }
 
-    private fun processDocumentInMessage(userId: Long, messageId: Int, document: Document) {
-        val fileUrl = requireNotNull(getFileUrl(document.fileId())) {
-            "Could not retrieve file url. User id: $userId, message id: $messageId"
-        }
+    private fun processDocumentInMessage(userId: Long, messageId: Int, document: Document) =
         downloadFile(
-            URI(fileUrl),
+            URI(getFileUrl(document.fileId())),
             getTargetPath(
                 userId,
                 requireNotNull(userToCollection[userId]),
                 document.fileName()
             )
         )
-    }
+
+    private fun processVideoMessage(userId: Long, messageId: Int, message: VideoNote) =
+        downloadFile(URI(getFileUrl(message.fileId())),
+            getTargetPath(userId,
+                requireNotNull(userToCollection[userId]){
+                    "User $userId does not have a collection assigned"
+                },
+                "video_message_$messageId.mp4")
+        )
+
+    private fun processVideo(userId: Long, messageId: Int, message: Video) =
+        downloadFile(URI(getFileUrl(message.fileId)),
+            getTargetPath(userId,
+                requireNotNull(userToCollection[userId]){
+                    "User $userId does not have a collection assigned"
+                },
+                message.fileName ?: "video_$messageId.mp4")
+        )
 
     private fun processTextInMessage(message: Message) {
         val userId = message.from().id()
@@ -280,16 +310,19 @@ class ImageAddingState(
             .reversed()
             .chunked(PAGE_SIZE)[pageIndex]
 
-    private fun getFileUrl(fileId: String): String? {
+    private fun getFileUrl(fileId: String): String {
         val request = GetFile(fileId)
         val getFileResponse = updatesProcessor.bot.execute(request)
 
         val file = getFileResponse.file()
 
-        return file
+        return requireNotNull(file
             ?.let {
                 updatesProcessor.bot.getFullFilePath(it)
             }
+        ) {
+            "Could not retrieve file url for file $fileId"
+        }
     }
 
     private fun downloadFile(fileUri: URI, filepath: String) {
