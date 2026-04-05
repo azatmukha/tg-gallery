@@ -1,0 +1,18 @@
+services:
+  tg-gallery:
+    container_name: tg-gallery-bot
+    restart: unless-stopped
+    build: .
+    env_file:
+      - .env
+    environment:
+      # Set configuration here
+      TOKEN: ${TOKEN}
+      DIRECTORY: "/app/Gallery"
+      WHITELIST: ${WHITELIST}
+
+      # Or set CONFIGURATION_FILEPATH variable and attach it as a volume
+      # CONFIGURATION_FILEPATH: /app/config
+    volumes:
+      - ${DIRECTORY}:/app/Gallery
+      # - /path-to-config/config:/app/config
