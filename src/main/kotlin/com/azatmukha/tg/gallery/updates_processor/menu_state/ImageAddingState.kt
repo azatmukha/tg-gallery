@@ -305,7 +305,9 @@ class ImageAddingState(
     private fun getCollectionsPage(pageIndex: Int): List<String> =
         getCollectionList()
             .reversed()
-            .chunked(PAGE_SIZE)[pageIndex]
+            .chunked(PAGE_SIZE).getOrElse(pageIndex){
+                emptyList()
+            }
 
     private fun getFileUrl(fileId: String): String {
         val request = GetFile(fileId)
